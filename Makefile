@@ -17,6 +17,10 @@ jb:
 	# -n nitpick generate warnings for all missing links
 	# --keep-going despite -W don't stop delay errors till the end
 	jupyter-book build -v --all -n --keep-going --path-output ${OUTDIR} --config ${PWD}/${CNTDIR}/${NAME}_config.yml --toc ${PWD}/${CNTDIR}/${NAME}_toc.yml ${CNTDIR}
+	cp -r ./_build ../../
+	# have to run twice to copy latex stuff after it's built
+	# not sure how to fix this so works first time
+	jupyter-book build -v --all -n --keep-going --path-output ${OUTDIR} --config ${PWD}/${CNTDIR}/${NAME}_config.yml --toc ${PWD}/${CNTDIR}/${NAME}_toc.yml ${CNTDIR}
 
 images: jb
 	-mkdir -p ${OUTDIR}/_build/html/images
@@ -28,14 +32,25 @@ fixlinks: images
 build: ## build the book
 build: fixlinks
 
+reset-ghp:
+	git push --force origin --delete gh-pages
+	git branch -D gh-pages
+
 pub:
-	ghp-import -n -p --prefix=${NAME} -f ${OUTDIR}/_build/html
-	@./ghp-nojekyll.sh
+	@ghp-import -n -p -f _build/html
 	@echo "Published to:"
 	@./ghp-url.sh ${NAME}
+push:
+	@./push.sh "$(msg)"
+
+sync:
+	@./sync.sh "$(msg)"
+
+
 
 clean: 
-	${RM} -r  ${OUTDIR}/_build
+	${RM} -r _build
+	${RM} -r ../../_build
 
 help:
 # http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
